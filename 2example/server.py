@@ -3,12 +3,32 @@ import sys
 import traceback
 from threading import Thread
 
-no_of_voters = 3
-no_of_candidates = 2
-
 def main():
     start_server()
 
+def voterNameExists(vname):
+    name = []
+    file_obj = open("list", "r+")
+    lines = file_obj.readlines()
+    for x in lines:
+        name.append(x.split()[0])
+    for idx, x in enumerate(name):
+        if x == vname:
+            return idx
+        else:
+            return -1
+
+def voterRegNumExists(vregnum):
+    regnum = []
+    file_obj = open("list", "r+")
+    lines = file_obj.readlines()
+    for x in lines:
+        regnum.append(x.split()[1])
+    for idx, x in enumerate(regnum):
+        if x == vregnum:
+            return idx
+        else:
+            return -1
 
 def start_server():
     host = "127.0.0.1"
@@ -44,39 +64,18 @@ def start_server():
 
 
 def client_thread(connection, ip, port, max_buffer_size = 5120):
-    is_active = True
 
-    while is_active:
-        client_input = receive_input(connection, max_buffer_size)
+    vname = connection.recv(max_buffer_size).decode("utf8").rstrip()
+    vregnum = connection.recv(max_buffer_size).decode("utf8").rstrip()
 
-        if "--quit--" in client_input:
-            print("Client is requesting to quit")
-            connection.close()
-            print("Connection " + ip + ":" + port + " closed")
-            is_active = False
-        else:
-            print("Processed result: {}".format(client_input))
-            connection.sendall("-".encode("utf8"))
+    ret_val_name = voterNameExists(vname)
+    ret_val_regnum = voterRegNumExists(vregnum)
 
+    if ret_val_name >= 0 and ret_val_regnum >= 0:
+        connection.sendall("OK".encode("utf8"))
 
-def receive_input(connection, max_buffer_size):
-    client_input = connection.recv(max_buffer_size)
-    client_input_size = sys.getsizeof(client_input)
-
-    if client_input_size > max_buffer_size:
-        print("The input size is greater than expected {}".format(client_input_size))
-
-    decoded_input = client_input.decode("utf8").rstrip()  # decode and strip end of line
-    result = process_input(decoded_input)
-
-    return result
-
-
-def process_input(input_str):
-    print("Processing the input received from client")
-
-   # return "Hello " + str(input_str).upper()
-    return str(input_str)
+    else:
+        connection.sendall("Not found".encode("utf8"))
 
 if __name__ == "__main__":
     main()

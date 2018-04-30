@@ -13,19 +13,20 @@ def main():
         sys.exit()
 
     #If connection successful:
-    #vname = raw_input("Enter name: ")
-    #vregnum = raw_input("Enter registration number: ")
-    print("Enter 'quit' to exit")
-    message = input(" -> ")
+    #Accept name and send to server:
+    vname = input("Enter name: ")
+    soc.sendall(vname.encode("utf8"))
 
-    while message != 'quit':
-        soc.sendall(message.encode("utf8"))
-        if soc.recv(5120).decode("utf8") == "-":
-            pass        # null operation
+    #Accept reg num and send to server:
+    vregnum = input("Enter registration number: ")
+    soc.sendall(vregnum.encode("utf8"))
 
-        message = input(" -> ")
+    #Receive data from server
+    data_received = soc.recv(5120).decode("utf8")
+    print(data_received)
 
-    soc.send(b'--quit--')
+    #Quit
+    soc.close()
 
 if __name__ == "__main__":
     main()
