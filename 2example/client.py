@@ -22,8 +22,31 @@ def main():
     soc.sendall(vregnum.encode("utf8"))
 
     #Receive data from server
-    data_received = soc.recv(5120).decode("utf8")
-    print(data_received)
+    bit_received = soc.recv(5120).decode("utf8")
+
+    if bit_received == "0":
+        print("Invalid name or registration number")
+        soc.close()
+    elif bit_received == "1":
+        while True:
+            print("\nWelcome, {}".format(vname))
+            print("\tMain Menu")
+            print("Please enter a number (1-4)")
+            print("1. Vote")
+            print("2. My vote history")
+            print("3. Election result")
+            print("4. Quit")
+
+            choice = input("Enter choice: ")
+            if choice == "4":
+                soc.close()
+                sys.exit()
+            else:
+                soc.sendall(choice.encode("utf8"))      #Send the choice to server
+                data_received = soc.recv(5120).decode("utf8")
+                print("Server says: {}".format(data_received))
+
+
 
     #Quit
     soc.close()

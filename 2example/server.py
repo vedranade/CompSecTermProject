@@ -72,10 +72,21 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
     ret_val_regnum = voterRegNumExists(vregnum)
 
     if ret_val_name >= 0 and ret_val_regnum >= 0:
-        connection.sendall("OK".encode("utf8"))
+        connection.sendall("1".encode("utf8"))
+        is_active = True
+        while is_active:
+            choice_received = connection.recv(max_buffer_size).decode("utf8").rstrip()
+            if choice_received == "1":
+                connection.sendall("ONE".encode("utf8"))
+            elif choice_received == "2":
+                connection.sendall("TWO".encode("utf8"))
+            elif choice_received == "3":
+                connection.sendall("THREE".encode("utf8"))
+            elif choice_received == "4":
+                is_active = False
 
     else:
-        connection.sendall("Not found".encode("utf8"))
+        connection.sendall("0".encode("utf8"))
 
 if __name__ == "__main__":
     main()
