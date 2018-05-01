@@ -1,6 +1,7 @@
 import socket
 import sys
 import traceback
+import re
 from threading import Thread
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -16,6 +17,10 @@ private_key = RSA.importKey(private_key_string)
 
 def main():
     start_server()
+
+def split_data(data):
+    m = re.search("\d", data)
+    return m.start()
 
 def voterNameExists(vname):
     name = []
@@ -98,6 +103,10 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
     print("Decrypted data: {}".format(dec_info_decoded))
     #dec_info_decoded = dec_info.decode()
 
+    vname = dec_info_decoded[0:split_data(dec_info_decoded)]
+    vregnum = dec_info_decoded[split_data(dec_info_decoded):]
+    print("Vname: {}".format(vname))
+    print("Vregnum: {}".format(vregnum))
     #print("Decrypted info: {}".format(dec_info_decoded))
 
     #print("Encrypted info: {}".format(enc_info))
