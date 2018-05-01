@@ -2,6 +2,17 @@ import socket
 import sys
 import traceback
 from threading import Thread
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Signature import PKCS1_v1_5 
+from Crypto.Hash import SHA256
+
+
+public_key_string = open("cli_pub.der","r").read()
+public_key = RSA.importKey(public_key_string)
+
+private_key_string = open("serv_priv.der","r").read()
+private_key = RSA.importKey(private_key_string)
 
 def main():
     start_server()
@@ -32,7 +43,7 @@ def voterRegNumExists(vregnum):
 
 def start_server():
     host = "127.0.0.1"
-    port = 8888         # arbitrary non-privileged port
+    port = 9999         # arbitrary non-privileged port
 
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)   # SO_REUSEADDR flag tells the kernel to reuse a local socket in TIME_WAIT state, without waiting for its natural timeout to expire
@@ -59,14 +70,38 @@ def start_server():
             print("Thread did not start.")
             traceback.print_exc()
             
-
     soc.close()
 
 
 def client_thread(connection, ip, port, max_buffer_size = 5120):
 
-    vname = connection.recv(max_buffer_size).decode("utf8").rstrip()
-    vregnum = connection.recv(max_buffer_size).decode("utf8").rstrip()
+    # vname = connection.recv(max_buffer_size).decode("utf8").rstrip()
+    # vregnum = connection.recv(max_buffer_size).decode("utf8").rstrip()
+    # enc_info = connection.recv(max_buffer_size).decode("utf8").rstrip()
+    data_received = connection.recv(max_buffer_size)
+    
+    print("Data recieved: {}".format(data_received))
+
+    enc_data = data_received[0:128]
+    signed_data = data_received[128:]
+
+    print("\n\nEncrypted data: {}".format(enc_data))
+    print("\n\nSigned data: {}".format(signed_data))
+
+
+
+
+    dec_cypher = PKCS1_OAEP.new(private_key)
+    dec_info = dec_cypher.decrypt(enc_data)
+    dec_info_decoded = dec_info.decode()
+
+    print("Decrypted data: {}".format(dec_info_decoded))
+    #dec_info_decoded = dec_info.decode()
+
+    #print("Decrypted info: {}".format(dec_info_decoded))
+
+    #print("Encrypted info: {}".format(enc_info))
+
 
     ret_val_name = voterNameExists(vname)
     ret_val_regnum = voterRegNumExists(vregnum)

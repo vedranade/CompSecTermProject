@@ -1,10 +1,21 @@
 import socket
 import sys
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Signature import PKCS1_v1_5 
+from Crypto.Hash import SHA256
+
+public_key_string = open("serv_pub.der","r").read()
+public_key = RSA.importKey(public_key_string)
+
+private_key_string = open("cli_priv.der","r").read()
+private_key = RSA.importKey(private_key_string)
+
 
 def main():
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = "127.0.0.1"
-    port = 8888
+    port = 9999
 
     try:
         soc.connect((host, port))
@@ -15,11 +26,30 @@ def main():
     #If connection successful:
     #Accept name and send to server:
     vname = input("Enter name: ")
-    soc.sendall(vname.encode("utf8"))
 
     #Accept reg num and send to server:
     vregnum = input("Enter registration number: ")
-    soc.sendall(vregnum.encode("utf8"))
+
+    #soc.sendall(vregnum.encode("utf8"))
+
+    #Encrypt the message:
+    vinfo = vname + vregnum
+    vinfo_encoded = str.encode(vinfo)
+    enc_cipher = PKCS1_OAEP.new(public_key)
+    enc_info = enc_cipher.encrypt(vinfo_encoded)
+
+    #print("Encrypted data: {}".format(enc_info))
+    #Sign the message:
+    vname_encoded = str.encode(vname)
+    hashmsg = SHA256.new(vname_encoded)
+    sign_cipher = PKCS1_v1_5.new(private_key)
+    signature = sign_cipher.sign(hashmsg)
+    #print("Signature: {}".format(signature))
+
+    data_to_be_sent = enc_info + signature
+    soc.sendall(data_to_be_sent)
+
+
 
     #Receive data from server
     bit_received = soc.recv(5120).decode("utf8")
