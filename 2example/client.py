@@ -38,13 +38,11 @@ def main():
     enc_cipher = PKCS1_OAEP.new(public_key)
     enc_info = enc_cipher.encrypt(vinfo_encoded)
 
-    #print("Encrypted data: {}".format(enc_info))
     #Sign the message:
     vname_encoded = str.encode(vname)
     hashmsg = SHA256.new(vname_encoded)
     sign_cipher = PKCS1_v1_5.new(private_key)
     signature = sign_cipher.sign(hashmsg)
-    #print("Signature: {}".format(signature))
 
     data_to_be_sent = enc_info + signature
     soc.sendall(data_to_be_sent)
@@ -53,7 +51,7 @@ def main():
 
     #Receive data from server
     bit_received = soc.recv(5120).decode("utf8")
-
+    
     if bit_received == "0":
         print("Invalid name or registration number")
         soc.close()
@@ -74,8 +72,15 @@ def main():
             else:
                 soc.sendall(choice.encode("utf8"))      #Send the choice to server
                 data_received = soc.recv(5120).decode("utf8")
-                print("Server says: {}".format(data_received))
-
+                if choice == "1" and data_received == "0":
+                    print("You have already voted")
+                elif choice == "1" and data_received == "1":
+                    print("Please enter a number (1-2)")
+                    print("1. Tim")
+                    print("2. Linda")
+    elif bit_received == "-1":
+        print("Digital signature not verified by server")
+        soc.close()
 
 
     #Quit
