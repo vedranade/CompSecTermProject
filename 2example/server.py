@@ -2,7 +2,7 @@ import socket
 import sys
 import traceback
 import re
-import time
+from time import gmtime, strftime
 from threading import Thread
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -136,9 +136,6 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
 
     vname_encoded = str.encode(vname)
 
-    print("Vname: {}".format(vname))
-    print("Vregnum: {}".format(vregnum))
-
     ret_val_name = voterNameExists(vname)
     ret_val_regnum = voterRegNumExists(vregnum)
 
@@ -177,10 +174,9 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
 
                         # writing to history file after voter has voted:
                         file_obj = open("history", "w+")
-                        file_obj.write(vregnum+"\t"+time.strftime("%Y-%m-%d,%H:%M\n"))
+                        file_obj.write(vregnum+"\t"+strftime("%Y-%m-%d,%H:%M\n", gmtime()))
                         file_obj.close()
                         no_of_voters -= 1
-                        print("No. of voters: {}".format(no_of_voters))
 
                         if no_of_voters == 0:
                             if tim_votes > linda_votes:
@@ -193,9 +189,31 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
                                 print("Linda\t%d" % linda_votes)
 
                 elif choice_received == "2":
-                    connection.sendall("TWO".encode("utf8"))
+                    regnum = []
+                    time = []
+                    string = "0"
+                    file_obj = open("history", "r+")
+                    lines = file_obj.readlines()
+                    file_obj.close()
+                    for x in lines:
+                        regnum.append(x.split()[0])
+                        time.append(x.split()[1])
+                    for idx, x in enumerate(regnum):
+                        if x == vregnum:
+                            string = "\nYou last voted on: "+time[idx]
+                    connection.sendall(string.encode("utf8"))
                 elif choice_received == "3":
-                    connection.sendall("THREE".encode("utf8"))
+                    if no_of_voters == 0:
+                        if tim_votes > linda_votes:
+                            string = "Tim wins\nCandidate:\tVotes:\nTim\t%d\nLinda\t%d" % (tim_votes, linda_votes)
+                            connection.sendall(string.encode("utf8"))
+                        elif tim_votes < linda_votes:
+                            string = "Linda wins\nCandidate:\tVotes:\nTim\t%d\nLinda\t%d" % (tim_votes, linda_votes)
+                            connection.sendall(string.encode("utf8"))
+                    else:
+                        connection.sendall("0".encode("utf8"))
+
+                    
                 elif choice_received == "4":
                     is_active = False
 
