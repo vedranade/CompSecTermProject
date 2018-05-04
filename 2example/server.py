@@ -2,6 +2,7 @@ import socket
 import sys
 import traceback
 import re
+import time
 from threading import Thread
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
@@ -64,14 +65,14 @@ def voterRegNumExists(vregnum):
             return 1
     return -1
 
-def voterHasVoted(vname):
+def voterHasVoted(vregnum):
     name = []
     file_obj = open("history", "r+")
     lines = file_obj.readlines()
     for x in lines:
         name.append(x.split()[0])
     for idx, x in enumerate(name):
-        if x == vname:
+        if x == vregnum:
             return True
         else:
             return False
@@ -148,7 +149,7 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
             while is_active:
                 choice_received = connection.recv(max_buffer_size).decode("utf8").rstrip()
                 if choice_received == "1":
-                    if voterHasVoted(vname):
+                    if voterHasVoted(vregnum):
                         connection.sendall("0".encode("utf8"))
                     else:
                         connection.sendall("1".encode("utf8"))
@@ -174,8 +175,9 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
                             with open("result", "w") as f:
                                 f.writelines(lines)
 
+                        # writing to history file after voter has voted:
                         file_obj = open("history", "w+")
-                        file_obj.write(vname+"\n")
+                        file_obj.write(vregnum+"\t"+time.strftime("%Y-%m-%d,%H:%M\n"))
                         file_obj.close()
                         no_of_voters -= 1
                         print("No. of voters: {}".format(no_of_voters))
