@@ -14,8 +14,8 @@ private_key = RSA.importKey(private_key_string)
 
 def main():
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "127.0.0.1"
-    port = 9999
+    host = str(sys.argv[1])
+    port = int(sys.argv[2])
 
     try:
         soc.connect((host, port))
@@ -84,16 +84,18 @@ def main():
                         enc_cipher = PKCS1_OAEP.new(public_key)
                         enc_info = enc_cipher.encrypt(candidate_name_encoded)
                         soc.sendall(enc_info)                       #Encrypt the vote and send to server
-                if choice == "3":
+                elif choice == "3":
                     if data_received == "0":
                         print("\nThe data is not available yet")
                     else:
                         print(data_received)
-                if choice == "2":
+                elif choice == "2":
                     if data_received == "0":
                         print("No voting history found")
                     else:
                         print(data_received)
+                else:
+                    print("Enter a valid choice")
 
     elif bit_received == "-1":
         print("Digital signature not verified by server")

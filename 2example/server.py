@@ -79,7 +79,7 @@ def voterHasVoted(vregnum):
 
 def start_server():
     host = "127.0.0.1"
-    port = 9999         # arbitrary non-privileged port
+    port = int(sys.argv[1])
 
     soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     soc.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)   # SO_REUSEADDR flag tells the kernel to reuse a local socket in TIME_WAIT state, without waiting for its natural timeout to expire
@@ -140,6 +140,7 @@ def client_thread(connection, ip, port, max_buffer_size = 5120):
     ret_val_regnum = voterRegNumExists(vregnum)
 
     if check_sign(vname_encoded, signed_data):
+        print("Digital signature verified")
         if ret_val_name >= 0 and ret_val_regnum >= 0 :
             connection.sendall("1".encode("utf8"))
             is_active = True
