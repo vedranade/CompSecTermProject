@@ -70,7 +70,7 @@ def main():
                 soc.close()
                 sys.exit()
             else:
-                soc.sendall(choice.encode("utf8"))      #Send the choice to server
+                soc.sendall(choice.encode("utf8"))                       #Send the choice to server
                 data_received = soc.recv(5120).decode("utf8")
                 if choice == "1" and data_received == "0":
                     print("You have already voted")
@@ -78,6 +78,12 @@ def main():
                     print("Please enter a number (1-2)")
                     print("1. Tim")
                     print("2. Linda")
+                    candidate_name = input("Enter choice: ")
+                    candidate_name_encoded = str.encode(candidate_name)
+                    enc_cipher = PKCS1_OAEP.new(public_key)
+                    enc_info = enc_cipher.encrypt(candidate_name_encoded)
+                    soc.sendall(enc_info)
+
     elif bit_received == "-1":
         print("Digital signature not verified by server")
         soc.close()
